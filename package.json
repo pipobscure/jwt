@@ -1,0 +1,38 @@
+{
+	"name": "@pipobscure/jwt",
+	"version": "0.0.1",
+	"description": "JWT Token Management",
+	"type": "module",
+	"exports": "./dist/jwt.js",
+	"files": [
+		"dist/jws.js",
+		"dist/jws.d.ts"
+	],
+	"keywords": [
+		"JWT",
+		"generate",
+		"verify"
+	],
+	"homepage": "https://github.com/pipobscure/jwt#readme",
+	"bugs": {
+		"url": "https://github.com/pipobscure/jwt/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/pipobscure/jwt.git"
+	},
+	"license": "ISC",
+	"author": "Philipp Dunkel <pip@pipobscure.com>",
+	"scripts": {
+		"test": "node --test 'src/*.test.ts'",
+		"build": "tsc --build --verbose",
+		"format": "biome check --write",
+		"postversion": "git push --follow-tags",
+		"prepublishOnly": "npm run build"
+	},
+	"devDependencies": {
+		"@pipobscure/biome": "^1.1.2",
+		"@types/node": "^24.9.1",
+		"typescript": "^5.9.3"
+	}
+}
