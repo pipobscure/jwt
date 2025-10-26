@@ -100,16 +100,19 @@ export async function verify(jwt: string, key: CryptoKey) {
 	const { header, payload, signature } = parts(jwt);
 	if (!signature) return false;
 	const hdr = parseB64(header) as Header;
+	if (hdr.alg !== algorithm(key.algorithm)) return false;
 	const sigtxt = [header, payload].join('.');
-	//console.error(`verify(${sigtxt}) == ${signature}`);
 	const sigdat = new TextEncoder().encode(sigtxt);
 	return await crypto.subtle.verify(ALGORITHMS[hdr.alg], key, Uint8Array.fromBase64(signature) as BufferSource, sigdat);
 }
 
-export async function generate(alg: Algorithm, key: CryptoKey, payload: any) {
+export async function generate(payload: any, key?: CryptoKey) {
+	const alg = key ? algorithm(key.algorithm) : undefined;
 	const hdr = stringifyB64({ typ: 'jwt', alg });
 	const pld = stringifyB64(payload);
 	const sigtxt = [hdr, pld].join('.');
+	if (!key) return sigtxt;
+	if (!alg) throw new TypeError('unsupported signing algorithm');
 	const sigdat = new TextEncoder().encode(sigtxt);
 	const sig = new Uint8Array(await crypto.subtle.sign(ALGORITHMS[alg], key, sigdat)).toBase64();
 	return [hdr, pld, sig].join('.');
@@ -118,4 +121,28 @@ export async function generate(alg: Algorithm, key: CryptoKey, payload: any) {
 export async function extract(jwt: string, key?: CryptoKey) {
 	if (key && !(await verify(jwt, key))) throw new Error('invalid signature');
 	return payload(jwt);
+}
+
+export function algorithm(params: CryptoKey['algorithm']) {
+	switch (params.name) {
+		case 'HMAC':
+			return `${(params as HmacKeyAlgorithm).hash.name}`.replace(/^SHA-/, 'HS') as Algorithm;
+		case 'RSASSA-PKCS1-v1_5':
+			return `${(params as RsaHashedKeyAlgorithm).hash.name}`.replace(/^SHA-/, 'RS') as Algorithm;
+		case 'RSA-PSS':
+			return `${(params as RsaHashedKeyAlgorithm).hash.name}`.replace(/^SHA-/, 'PS') as Algorithm;
+		case 'ECDSA':
+			switch ((params as EcKeyGenParams).namedCurve) {
+				case 'P-256':
+					return 'ES256' as Algorithm;
+				case 'P-384':
+					return 'ES384' as Algorithm;
+				case 'P-521':
+					return 'ES512' as Algorithm;
+				default:
+					return null;
+			}
+		default:
+			return null;
+	}
 }

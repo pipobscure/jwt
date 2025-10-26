@@ -26,14 +26,13 @@ Implements creation, signing, verification, and extraction of JWTs with minimal 
 
 ## API Overview
 
-### `generate(alg: Algorithm, key: CryptoKey, payload: any): Promise<string>`
+### `generate(payload: any, key?: CryptoKey): Promise<string>`
 
 Creates and signs a new JWT.
 
 **Parameters**
-- `alg`: The signing algorithm (e.g. `"HS256"`, `"RS256"`, `"ES256"`).
-- `key`: A `CryptoKey` object usable for signing with the given algorithm.
 - `payload`: Any serializable JavaScript object to embed in the JWT.
+- `key`: A `CryptoKey` object usable for signing.
 
 **Returns**
 - A `Promise<string>` — the encoded and signed JWT string (`header.payload.signature`).
@@ -43,7 +42,7 @@ Creates and signs a new JWT.
 ```ts
 import { generate } from '@pipobscure/jwt';
 
-const jwt = await generate('HS256', secretKey, { sub: 'user123', exp: 1710000000 });
+const jwt = await generate({ sub: 'user123', exp: 1710000000 }, secretKey);
 console.log(jwt);
 ```
 
@@ -112,7 +111,7 @@ const claims = payload(token);
 console.log(claims.exp);
 ```
 
-## 🔒 Key Management
+## Key Management
 
 You can create compatible keys using the Web Crypto API:
 
@@ -136,7 +135,7 @@ const key = await crypto.subtle.importKey(
 );
 ```
 
-## 📄 License
+## License
 
 Copyright 2025 Philipp Dunkel
 
