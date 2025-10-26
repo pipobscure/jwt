@@ -47,7 +47,7 @@ export const ALGORITHMS = {
 	},
 	ES512: {
 		name: 'ECDSA',
-		namedCurve: 'P-384',
+		namedCurve: 'P-521',
 		hash: 'SHA-512',
 	},
 	PS256: {
