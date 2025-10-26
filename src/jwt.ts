@@ -96,16 +96,6 @@ export function payload(jwt: string) {
 	return parseB64(parts(jwt).payload);
 }
 
-export async function verify(jwt: string, key: CryptoKey) {
-	const { header, payload, signature } = parts(jwt);
-	if (!signature) return false;
-	const hdr = parseB64(header) as Header;
-	if (hdr.alg !== algorithm(key.algorithm)) return false;
-	const sigtxt = [header, payload].join('.');
-	const sigdat = new TextEncoder().encode(sigtxt);
-	return await crypto.subtle.verify(ALGORITHMS[hdr.alg], key, Uint8Array.fromBase64(signature) as BufferSource, sigdat);
-}
-
 export async function generate(payload: any, key?: CryptoKey) {
 	const alg = key ? algorithm(key.algorithm) : undefined;
 	const hdr = stringifyB64({ typ: 'jwt', alg });
@@ -114,13 +104,21 @@ export async function generate(payload: any, key?: CryptoKey) {
 	if (!key) return sigtxt;
 	if (!alg) throw new TypeError('unsupported signing algorithm');
 	const sigdat = new TextEncoder().encode(sigtxt);
-	const sig = new Uint8Array(await crypto.subtle.sign(ALGORITHMS[alg], key, sigdat)).toBase64();
+	const sig = await sign(alg, key, sigdat);
 	return [hdr, pld, sig].join('.');
 }
 
 export async function extract(jwt: string, key?: CryptoKey) {
-	if (key && !(await verify(jwt, key))) throw new Error('invalid signature');
-	return payload(jwt);
+	const { header, payload, signature } = parts(jwt);
+	if (key) {
+		if (!signature) throw new Error('missing signature');
+		const hdr = parseB64(header) as Header;
+		if (hdr.alg !== algorithm(key.algorithm)) return false;
+		const sigdat = new TextEncoder().encode([header, payload].join('.'));
+		const valid = await verify(hdr.alg, key, signature, sigdat);
+		if (!valid) throw new Error('invalid signature');
+	}
+	return parseB64(payload);
 }
 
 export function algorithm(params: CryptoKey['algorithm']) {
@@ -145,4 +143,14 @@ export function algorithm(params: CryptoKey['algorithm']) {
 		default:
 			return null;
 	}
+}
+
+export async function sign(alg: Algorithm, key: CryptoKey, payload: Uint8Array) {
+	const sig = await crypto.subtle.sign(ALGORITHMS[alg], key, payload as BufferSource);
+	return new Uint8Array(sig).toBase64();
+}
+export async function verify(alg: Algorithm, key: CryptoKey, signature: string, payload: Uint8Array) {
+	const sig = Uint8Array.fromBase64(signature);
+	const valid = await crypto.subtle.verify(ALGORITHMS[alg], key, sig as BufferSource, payload as BufferSource);
+	return valid;
 }

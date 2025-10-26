@@ -22,8 +22,6 @@ Implements creation, signing, verification, and extraction of JWTs with minimal 
 | PS384      | RSA-PSS | SHA-384  | Asymmetric (RSA PSS) |
 | PS512      | RSA-PSS | SHA-512  | Asymmetric (RSA PSS) |
 
----
-
 ## API Overview
 
 ### `generate(payload: any, key?: CryptoKey): Promise<string>`
@@ -46,27 +44,6 @@ const jwt = await generate({ sub: 'user123', exp: 1710000000 }, secretKey);
 console.log(jwt);
 ```
 
----
-
-### `verify(jwt: string, key: CryptoKey): Promise<boolean>`
-
-Verifies the integrity and authenticity of a JWT.
-
-**Parameters**
-- `jwt`: The token string to verify.
-- `key`: The `CryptoKey` used for verification.
-
-**Returns**
-- A `Promise<boolean>` — `true` if the signature is valid, otherwise `false`.
-
-**Example**
-```ts
-const isValid = await verify(token, secretKey);
-if (!isValid) throw new Error('Invalid token');
-```
-
----
-
 ### `extract(jwt: string, key?: CryptoKey): Promise<any>`
 
 Extracts and decodes the payload from a JWT, optionally verifying the signature.
@@ -87,8 +64,6 @@ const payload = await extract(token, publicKey);
 console.log(payload.sub);
 ```
 
----
-
 ### `header(jwt: string): { typ: string; alg: Algorithm }`
 
 Returns the decoded header section of a JWT.
@@ -99,8 +74,6 @@ const { alg } = header(token);
 console.log(`Algorithm used: ${alg}`);
 ```
 
----
-
 ### `payload(jwt: string): any`
 
 Returns the decoded payload section of a JWT **without verifying** the signature.
@@ -110,6 +83,14 @@ Returns the decoded payload section of a JWT **without verifying** the signature
 const claims = payload(token);
 console.log(claims.exp);
 ```
+
+### `sign(alg: Algorithm, key: CryptoKey, payload: Uint8Array) : Promise<string>`
+
+Signs the `payload` using the `alg` and `key` and returns the Base64 encoded signature.
+
+### `verify(alg: Algorithm, key: CryptoKey, signature: string, payload: Uint8Array) : Promise<boolean>`
+
+Verifies the `signature` is valid for the `payload`.
 
 ## Key Management
 

@@ -1,4 +1,5 @@
 import * as Assert from 'node:assert/strict';
+import { randomBytes } from 'node:crypto';
 import { describe, it } from 'node:test';
 
 import * as JWT from './jwt.ts';
@@ -24,16 +25,25 @@ function testAlgorithm(alg?: JWT.Algorithm) {
 	describe(alg ?? 'unsigned', () => {
 		let token = '';
 		const keys = createKeys(alg);
-
+		const data = randomBytes(50);
+		let signature: string | undefined;
+		it('can sign', async () => {
+			if (!alg) return;
+			const { signKey } = await keys;
+			Assert.ok(signKey);
+			signature = await JWT.sign(alg, signKey, data);
+			Assert.ok(signature);
+		});
+		it('can verify', async () => {
+			if (!alg) return;
+			const { verifyKey } = await keys;
+			Assert.ok(verifyKey);
+			Assert.ok(signature);
+			Assert.ok(await JWT.verify(alg, verifyKey, signature, data));
+		});
 		it('can generate a token', async () => {
 			token = await JWT.generate({ sub: 'test', test: alg ?? 'none' }, (await keys).signKey);
 			Assert.ok(token.length);
-		});
-		it('can verify a token', async () => {
-			Assert.ok(token.length);
-			const { verifyKey } = await keys;
-			if (!verifyKey) return;
-			Assert.ok(await JWT.verify(token, verifyKey));
 		});
 		it('can get the payload', async () => {
 			Assert.ok(token.length);
