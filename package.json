@@ -5,8 +5,8 @@
 	"type": "module",
 	"exports": "./dist/jwt.js",
 	"files": [
-		"dist/jws.js",
-		"dist/jws.d.ts"
+		"./dist/jwt.js",
+		"./dist/jwt.d.ts"
 	],
 	"keywords": [
 		"JWT",
