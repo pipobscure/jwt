@@ -21,7 +21,7 @@
 		"type": "git",
 		"url": "git+https://github.com/pipobscure/jwt.git"
 	},
-	"license": "ISC",
+	"license": "EUPL-1.2",
 	"author": "Philipp Dunkel <pip@pipobscure.com>",
 	"scripts": {
 		"test": "node --test 'src/*.test.ts'",
